@@ -22,8 +22,8 @@ class main:
             elif(key=="user"):
                 self.user=value
             elif(key=="password"):
-                #self.password=value
-                pass
+                self.password=value
+                
             elif(key=="home"):
                 self.home=value
 
@@ -45,6 +45,24 @@ class main:
             if(f == filename):
                 return True
         return False
+
+    def getListOfNames(self,show):
+        files = []
+        try:
+            self.ftp.cwd(self.home)
+            self.ftp.cwd(""+show)
+            files = self.ftp.nlst()
+            self.ftp.cwd("..")
+        except ftplib.error_perm as resp:
+            if str(resp) == "550 No files found":
+                print("No files in this directory")
+            else:
+                raise
+        files.remove(".")
+        files.remove("..")
+        files.remove("info.json")
+        return files
+
 
     def getFile(self, path):
         if(not self.exists(path)):
@@ -69,10 +87,11 @@ class main:
                 print("No files in this directory")
             else:
                 raise
-
+        i = 1
         for f in files:
-            if(f != "." and f != ".." and f[0]!="."):
-                print(f)
+            if(f != "." and f != ".." and f[0]!="." and f != "info.json"):
+                print("Episode: "+str(i)+": "+f)
+                i+=1
 
     def handle(self,block):
         self.sizeWritten += 1024
@@ -207,13 +226,37 @@ if(upload==True):
     m.uploadShow(path,name,episodes,season,discription)
 
 if(play):
-    m.getFile(show)
+    
     file = show.split("/")[len(show.split("/"))-1]
     
-    updateLastWatch(m,show)
+    try:
+        episode = int(file)
+        episodename=(m.getListOfNames(show.replace("/"+file,""))[episode-1])
+        show = show.replace(file,episodename)
+        file=episodename
+    except:
+        try:
+            last = m.getInfo(show)["lastWatched"]
+            i = 1
+            episodes = m.getListOfNames(show)
+            for f in episodes:
+                if(f==last and i < len(episodes)):
+                    show += "/"+episodes[i]
+                    file = episodes[i]
+                if(i >= len(episodes)):
+                    print("You have watched all the episodes")
+                i+=1
+        except:
+            print("error :(")
+    try:
+        print("playing %s" %file)
+        m.getFile(show)
+        os.system("vlc "+show.replace(file,"'")+file+"'")
+        updateLastWatch(m,show)
+    except:
+        print("idk")
     
-    os.system("vlc "+show.replace(file,"'")+file+"'")
-    
+
 if(List):
     m.listfolder(listpath)
 
