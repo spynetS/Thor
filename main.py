@@ -1,3 +1,4 @@
+from pathlib import Path
 import ftplib
 import os
 import sys
@@ -12,8 +13,9 @@ class main:
     home=""
     sizeWritten = 0
     totalSize = 0
+    downloads = "/home/spy/Downloads/";
     def __init__(self):
-        file = open(".env")
+        file = open("/home/spy/dev/Thor/.env")
         for line in file:
             value = line.split(":")[1].replace("\n","")
             key = line.split(":")[0]
@@ -63,13 +65,24 @@ class main:
         files.remove("info.json")
         return files
 
-
+    def download(self,block):
+        open(""+self.path, 'wb').write(block)
+        self.sizeWritten += len(block) 
+        percentComplete = self.sizeWritten / self.totalSize
+        print(str(math.floor((self.sizeWritten / self.totalSize)*100))+" %")
+    
     def getFile(self, path):
-        if(not self.exists(path)):
+        ftpPath = path
+        if(not self.exists(self.downloads+path)):
             filename = os.path.basename(path)
-            if not os.path.exists(path.replace(filename,"")):
-                os.makedirs(path.replace(filename,""))
-            self.ftp.retrbinary("RETR " + path ,open(""+path, 'wb').write)
+            print(path.replace(filename,""))
+            if not os.path.exists(self.downloads+path.replace(filename,"")):
+                os.makedirs(self.downloads+path.replace(filename,""))
+            
+            self.totalSize = self.ftp.size(ftpPath)
+            self.path = self.downloads+path
+            print(ftpPath)
+            self.ftp.retrbinary("RETR " + ftpPath ,self.download)
         else:
             print("")
 
@@ -102,9 +115,9 @@ class main:
         files = os.listdir(path)
         os.chdir(path)
         for f in files:
-            if os.path.isfile(path + r'/{}'.format(f)):
+            if os.path.isfile((f)):
                 self.totalSize += os.path.getsize(f)
-            elif os.path.isdir(path + r'/{}'.format(f)):
+            elif os.path.isdir((f)):
                 self.setTotalSize(path + r'/{}'.format(f))
         os.chdir('..')
 
@@ -112,8 +125,9 @@ class main:
         self.setTotalSize(path)
         files = os.listdir(path)
         os.chdir(path)
+        files.sort()
         for f in files:
-            if os.path.isfile(path + r'/{}'.format(f)):
+            if os.path.isfile((f)):
                 fh = open(f, 'rb') 
                 self.ftp.storbinary('STOR %s' % f, fh,callback=self.handle,blocksize=1024)
                 fh.close()
@@ -124,7 +138,7 @@ class main:
         self.ftp.cwd('..')
         os.chdir('..')
         
-    def uploadShow(self,path,name=None,episodes="",season="",discription="",lastWatched=None):
+    def uploadShow(self,path,name=None,episodes="",season="",discription="",lastWatched=""):
         if(name==None):
             name = os.path.basename(path)
 
@@ -151,7 +165,6 @@ class main:
         file.close()
         self.uploadFile(show+"/info.json")
 
-
     def uploadFile(self, path):
         fh = open(path, 'rb') 
         self.ftp.storbinary('STOR %s' % path, fh,blocksize=1024)
@@ -160,7 +173,6 @@ def createDir(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-
 def updateLastWatch(ftp,show):
 
     file = show.split("/")[len(show.split("/"))-1]
@@ -168,7 +180,6 @@ def updateLastWatch(ftp,show):
 
     ftp.updateInfo(show,"lastWatched",file)
     
-
 m = main()
 m.connect()
 USER = os.environ['HOME']
@@ -187,7 +198,7 @@ show = ""
 
 List = False
 listpath = "."
-
+downloads = "/home/spy/Downloads/"
 i = 0
 for arg in sys.argv:
     
@@ -230,9 +241,11 @@ if(play):
     file = show.split("/")[len(show.split("/"))-1]
     
     try:
+        print(m.getListOfNames("mina-videos"))
         episode = int(file)
         episodename=(m.getListOfNames(show.replace("/"+file,""))[episode-1])
         show = show.replace(file,episodename)
+        
         file=episodename
     except:
         try:
@@ -242,7 +255,7 @@ if(play):
                 print(m.getListOfNames(show.replace("/"+file,""))[0])
                 last = (m.getListOfNames(show.replace("/"+file,""))[0])
 
-            i = 0
+            i = 1
             episodes = m.getListOfNames(show)
             print(episodes)
             for f in episodes:
@@ -253,13 +266,16 @@ if(play):
                     print("You have watched all the episodes")
                 i+=1
         except:
+            raise
             print("error :(")
     try:
         print("playing %s" %file)
+        print("d s "+downloads+show)
         m.getFile(show)
-        os.system("vlc "+show.replace(file,"'")+file+"'")
+        os.system("vlc "+downloads+show.replace(file,"'")+file+"'")
         updateLastWatch(m,show)
     except:
+        raise
         print("idk")
     
 
