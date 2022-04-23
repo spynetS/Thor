@@ -1,0 +1,37 @@
+man ska kunna ladda upp en folder (movie or serie season) inuti foldern
+ska alla videos vara och en json info fil
+
+info.json{
+    seriename:
+    season:
+    episodes:
+    discripton:
+    uploaded:
+    lastWatched:
+}
+
+allt är med flaggor
+
+thor -u /home/spy/downloads/stranger-things-season-1
+
+detta kommer skapa info.json filen och skriva in seriename som foldername
+season 0 (svårt att avläsa)
+episodes hur många video filer inuti
+discripton : none
+uploaded time
+
+thor -u /home/spy/downloads/stranger-things-season-1 --discripton cool serie -season 1
+
+med addon flaggor kan man sätta varje tag
+
+thor -p stranger-things season 1 ep 1
+
+kommer ladda ner episode 1 av säsång 1 av stranger-things serien och starta den
+då kommer den i info.json spara så vi vetvilken senaste episoden var
+
+
+thor -p stranger-things 
+
+detta ska spela nästa i tur efter lastWatched
+
+
