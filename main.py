@@ -124,7 +124,7 @@ class main:
         self.ftp.cwd('..')
         os.chdir('..')
         
-    def uploadShow(self,path,name=None,episodes="",season="",discription="",lastWatched="0"):
+    def uploadShow(self,path,name=None,episodes="",season="",discription="",lastWatched=None):
         if(name==None):
             name = os.path.basename(path)
 
@@ -237,8 +237,14 @@ if(play):
     except:
         try:
             last = m.getInfo(show)["lastWatched"]
-            i = 1
+            print(len(last)<=0)
+            if(len(last)<=0):
+                print(m.getListOfNames(show.replace("/"+file,""))[0])
+                last = (m.getListOfNames(show.replace("/"+file,""))[0])
+
+            i = 0
             episodes = m.getListOfNames(show)
+            print(episodes)
             for f in episodes:
                 if(f==last and i < len(episodes)):
                     show += "/"+episodes[i]
